@@ -1,0 +1,20 @@
+# Local database overlay for docker-compose.dev.yml.
+# Frontend and server run from source on the host using the package scripts.
+services:
+  sparkyfitness-db:
+    container_name: healthpilot-db
+    restart: unless-stopped
+    # Pass only the database settings below, not the full application .env.
+    env_file: !reset []
+    ports: !override
+      - "127.0.0.1:5432:5432"
+    volumes: !override
+      - healthpilot-postgresql:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  healthpilot-postgresql:
