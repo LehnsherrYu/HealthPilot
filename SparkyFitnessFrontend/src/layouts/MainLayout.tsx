@@ -67,6 +67,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onStartOnboarding,
 }) => {
   const { t } = useTranslation();
+  const { t: hp } = useTranslation('healthpilot');
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -131,6 +132,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       }
       items.push(
         {
+          value: 'symptom-journal',
+          label: hp('title'),
+          icon: BookOpen,
+        },
+        {
           value: 'medications',
           label: t('nav.medications', 'Medications'),
           icon: Pill,
@@ -167,7 +173,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       }
     }
     return items;
-  }, [isActingOnBehalf, hasWritePermission, cycleSettings, t]);
+  }, [isActingOnBehalf, hasWritePermission, cycleSettings, t, hp]);
 
   // Map meal type names to icons
   const getMealTypeIcon = useCallback((name: string): LucideIcon => {
@@ -245,6 +251,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       }
       tabs.push(
         {
+          value: '/symptom-journal',
+          label: hp('title'),
+          icon: BookOpen,
+        },
+        {
           value: '/medications',
           label: t('nav.medications', 'Medications'),
           icon: Pill,
@@ -297,6 +308,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     user?.role,
     t,
     cycleSettings,
+    hp,
   ]);
 
   const availableMobileTabs = useMemo(() => {

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-09-24_
 
 SparkyFitness Frontend is the React web app for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessFrontend/`.
 
@@ -14,7 +14,7 @@ If a task also touches the server, mobile app, or `shared/`, read that package g
 
 ## Current Snapshot
 
-- Stack: React 19, Vite 8, TypeScript 5, Tailwind CSS v4 (via `@tailwindcss/vite`), shadcn/ui-style Radix primitives, TanStack Query 5, React Router 7 (`createBrowserRouter`), i18next, Better Auth client, Zod 4, Recharts.
+- Stack: React 19, Vite 8, TypeScript 6, Tailwind CSS v4 (via `@tailwindcss/vite`), shadcn/ui-style Radix primitives, TanStack Query 5, React Router 7 (`createBrowserRouter`), i18next, Better Auth client, Zod 4, Recharts.
 - `@/*` maps to `src/`; `@workspace/shared` maps to `../shared/src/index.ts` (also in Jest via `moduleNameMapper`).
 - Dev server runs on port `8080` and proxies `/api`, `/mcp`, and `/uploads` to the backend on `3010`; `/health-data` is proxied with an `/api` prefix rewrite. Override the backend host with `VITE_BACKEND_HOST`.
 - PWA (`vite-plugin-pwa`) is enabled in production builds only.
@@ -42,11 +42,13 @@ pnpm run build
 
 Features are organized by domain, and the same domain folder name appears in `src/pages/`, `src/api/`, and `src/hooks/`. A feature change usually touches the matching folder in all three:
 
-- Page domains: `Admin`, `Auth`, `Chat`, `CheckIn`, `Cycle`, `Diary`, `Errors`, `Exercises`, `Fasting`, `Foods`, `Goals`, `Integrations`, `Medications`, `Reports`, `Settings`.
+- Page domains: `Admin`, `Auth`, `Chat`, `CheckIn`, `Cycle`, `Diary`, `Errors`, `Exercises`, `Fasting`, `Foods`, `Goals`, `Integrations`, `Medications`, `Reports`, `Settings`, `SymptomJournal`.
 - API domains add a few more: `AiConversions`, `Chatbot`, `Onboarding`, `Pregnancy`, `SleepScience`.
 - Example: a Medications bug lives in `src/pages/Medications/` + `src/api/Medications/` + `src/hooks/` medication hooks. Start there, not with a repo-wide search.
 
 ## Source Map
+
+- `src/pages/SymptomJournal/`, `src/api/SymptomJournal/`, `src/hooks/SymptomJournal/` — owner-only HealthPilot journal.
 
 - `src/main.tsx` - app bootstrap; creates the shared `QueryClient` with global `QueryCache`/`MutationCache` handlers that render toasts from query/mutation `meta` (`errorTitle`, `errorMessage`, `successMessage`).
 - `src/App.tsx` - route registry via `createBrowserRouter`, plus `PrivateRoute` and `PermissionRoute` wrappers (permission-gated areas include `reports` and `admin`).
@@ -67,10 +69,10 @@ When searching, ignore `node_modules/`, `dist/`, and every locale except `public
 
 ## Translations (i18n)
 
-- Only ever edit `public/locales/en/translation.json`. The other 35 locales are machine-synced through the `sync-translations.yml` workflow and a separate SparkyFitnessTranslations repo; hand-editing them creates conflicts with that pipeline.
+- For upstream translations, only edit `public/locales/en/translation.json`. The other 35 locales are machine-synced through the `sync-translations.yml` workflow and a separate SparkyFitnessTranslations repo; hand-editing them creates conflicts with that pipeline.
 - UI strings go through `useTranslation()` / `t('...')` keys, not hardcoded literals.
 - `en/translation.json` is ~120 KB - grep for the key or section you need instead of reading the whole file.
-- Developer docs: `../docs/content/8.developer/9.translations.md`.
+- Developer docs: `../docs/src/developer/translations.md`.
 
 ## Conventions
 
@@ -91,6 +93,8 @@ When searching, ignore `node_modules/`, `dist/`, and every locale except `public
 - Lint is strict (`--max-warnings 0`); unused imports fail the build.
 
 ## Quick Routing
+
+- HealthPilot journal: `src/pages/SymptomJournal/`; its independent `healthpilot` namespace lives in `src/locales/healthpilot/{en,zh}.json`. These are hand-maintained resources outside upstream translation sync.
 
 - Routing/navigation/permission issue: `src/App.tsx` (router, `PrivateRoute`, `PermissionRoute`) and `src/layouts/MainLayout.tsx`.
 - API/error-toast issue: `src/api/api.ts`, then the domain client in `src/api/<Domain>/`, then the query/mutation `meta` in the calling hook.

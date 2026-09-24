@@ -6,6 +6,14 @@ The system is built with **least-privilege boundary isolation** using PostgreSQL
 
 ---
 
+## HealthPilot Private Symptom Journal
+
+The **Symptom journal / 症状日志** page is private to its owner. No family permission, including Manage Medications or View Reports, grants access. Switch back to your own profile before using it. Existing medication symptom logs retain their existing sharing behavior.
+
+Create a record with your original words, symptom name and start time. Body location, severity, triggers, relieving factors and notes are optional. An ended event requires an end time. Original text remains unchanged during editing; use notes for corrections. History filters use the start date in your configured timezone. Delete requires confirmation and removes the entire record. The journal supports English and Chinese and does not send records to an AI service.
+
+症状日志仅本人可见，家庭共享和报告权限均不适用。原文按输入保存，编辑时保持不变，可在备注中更正。删除需要确认；日期筛选使用个人设置的时区。
+
 ## How to Set Up Sharing
 
 Setting up a connection is simple and can be managed directly from the application settings:

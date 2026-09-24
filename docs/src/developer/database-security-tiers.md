@@ -1,6 +1,6 @@
 # Database Security & RLS Tiers
 
-*Last updated: 2026-09-01*
+*Last updated: 2026-09-24*
 
 SparkyFitness uses PostgreSQL Row-Level Security (RLS) to enforce strict data isolation between accounts, caregivers, family members, and third-party integrations (API keys). This document covers the security design, context switching mechanism, and the three-tier database table classifications.
 
@@ -38,6 +38,7 @@ These tables contain highly sensitive credentials, API keys, SSO tokens, 2FA rec
 | `user_ignored_updates` | Records of skipped release updates | Owner-Only | Owner-Only |
 | `admin_activity_logs` | Admin action audits | Admin-Only | Admin-Only |
 | `ai_service_settings` | User-defined custom assistant configurations | Owner-Only | Owner-Only (Public configs readable by all) |
+| `healthpilot_symptom_journal` | Private HealthPilot symptom events and original text; no reports or family sharing | Owner-Only (`authenticated_user_id()`) | Owner-Only |
 | `cycle_settings` | Cycle & pregnancy hub settings (mode, cycle parameters, birth control, conditions) | Owner-Only | Owner-Only |
 | `cycle_daily_entries` | Per-day cycle logs (flow, period products, BBT, cervical mucus, moods, libido, notes) | Owner-Only | Owner-Only |
 | `cycles` | Derived/manually-corrected period & cycle history records | Owner-Only | Owner-Only |

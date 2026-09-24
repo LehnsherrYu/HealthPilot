@@ -4,20 +4,21 @@ This doc maps how access control works across the system. Understanding this pre
 
 ## Permission Types
 
-Grants live in `family_access.access_permissions` (JSONB booleans: `can_manage_diary`, `can_manage_checkin`, `can_manage_medications`, `can_view_reports`, `can_view_food_library`, `calorie`). Route/RLS code uses *logical* permission strings mapped onto those keys in `permissionUtils.ts` (`canAccessUserData`) / SQL `can_access_user_data`.
+Grants live in `family_access.access_permissions` (JSONB booleans: `can_manage_diary`, `can_manage_checkin`, `can_manage_medications`, `can_view_reports`, `can_view_food_library`, `calorie`). Route/RLS code uses _logical_ permission strings mapped onto those keys in `permissionUtils.ts` (`canAccessUserData`) / SQL `can_access_user_data`.
 
 - **Write:** `diary` (`goals`/`exercise`/`water` alias onto `can_manage_diary`), `checkin`, `medications`.
 - **Read:** `reports` (via `can_view_reports`/`can_manage_diary`/`can_manage_checkin`) and `*_read` variants (`diary_read`, `checkin_read`, `medications_read`).
-- **Inheritance:** a `reports`/`can_view_reports` (or `calorie`) grant adds *read* on `mood`, `goals`, `exercise`, `fasting`, `sleep`, `water`, `symptoms`; write types are not inherited.
+- **Inheritance:** a `reports`/`can_view_reports` (or `calorie`) grant adds _read_ on `mood`, `goals`, `exercise`, `fasting`, `sleep`, `water`, `symptoms`; write types are not inherited.
 - **Owner-only:** cycle/pregnancy are **not** delegatable (no `checkPermissionMiddleware`; RLS restricts to owner — `routes/v2/cycleRoutes.ts`). There is no `cycle` permission.
 
 Test: `tests/permissionUtils.test.ts`.
 
 ## Domain → Permission Mapping
 
-**For the authoritative table-to-permission mapping and RLS tier classification, see [`../docs/content/8.developer/11.database-security-tiers.md`](../docs/content/8.developer/11.database-security-tiers.md).** It lists every table, its permission type, and whether it's Tier 1 (owner-only), Tier 2 (owner-write, delegate-read), or Tier 3 (owner-read, delegate-read, external-read).
+**For the authoritative table-to-permission mapping and RLS tier classification, see [`../docs/src/developer/database-security-tiers.md`](../docs/src/developer/database-security-tiers.md).** It lists every table, its permission type, and whether it's Tier 1 (owner-only), Tier 2 (owner-write, delegate-read), or Tier 3 (owner-read, delegate-read, external-read).
 
 Quick reference:
+
 - **Tier 1** — Credentials, auth, admin data (owner-only, RLS is strict)
 - **Tier 2** — Diaries, logs, preferences (owner-write, delegates can read)
 - **Tier 3** — Public profiles, shared exercise library (everyone can read)
@@ -31,7 +32,9 @@ Every server model that touches user data must follow this pattern:
 const client = getClient(userId, authenticatedUserId);
 try {
   // All queries through this client respect RLS
-  const result = await client.query('SELECT * FROM foods WHERE user_id = $1', [userId]);
+  const result = await client.query("SELECT * FROM foods WHERE user_id = $1", [
+    userId,
+  ]);
   // ... use result
 } finally {
   client.release();

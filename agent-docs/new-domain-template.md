@@ -16,7 +16,7 @@ Use this checklist when adding a major feature area (e.g., symptom tracking, wor
 
 - [ ] Create migration in `SparkyFitnessServer/db/migrations/YYYYMMDDHHMMSS_<feature>.sql`
 - [ ] Add RLS policies to `db/rls_policies.sql` checking the permission type
-- [ ] Add/update security tier in `docs/content/8.developer/11.database-security-tiers.md` (Tier 1/2/3)
+- [ ] Add/update security tier in `docs/src/developer/database-security-tiers.md` (Tier 1/2/3)
 - [ ] Create route file `routes/v2/<Domain>Routes.ts` or `routes/<domain>Routes.ts`
   - Use `checkPermissionMiddleware(permissionType)` to guard write endpoints
   - Import Zod schemas from `../schemas/` and shared
@@ -53,7 +53,7 @@ Use this checklist when adding a major feature area (e.g., symptom tracking, wor
 
 ## Phase 5: Documentation & Cross-Package Validation
 
-- [ ] Update `docs/content/2.features/` with user-facing feature description
+- [ ] Update `docs/src/features/` with user-facing feature description
 - [ ] Update root `AGENTS.md` with new domain in Source Map and Quick Routing
 - [ ] Update package guides (frontend, server, mobile) if adding a complex pattern
 - [ ] Set the `Last updated` date

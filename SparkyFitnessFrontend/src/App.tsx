@@ -62,6 +62,9 @@ const Reports = lazyWithChunkRecovery(() => import('./pages/Reports/Reports'));
 const Medications = lazyWithChunkRecovery(
   () => import('./pages/Medications/Medications')
 );
+const SymptomJournalPage = lazyWithChunkRecovery(
+  () => import('./pages/SymptomJournal/SymptomJournalPage')
+);
 const CyclePage = lazyWithChunkRecovery(
   () => import('./pages/Cycle/CyclePage')
 );
@@ -404,6 +407,11 @@ const router = createBrowserRouter([
           {
             path: 'medications',
             Component: Medications,
+            ErrorBoundary: RouteErrorBoundary,
+          },
+          {
+            path: 'symptom-journal',
+            Component: SymptomJournalPage,
             ErrorBoundary: RouteErrorBoundary,
           },
           {

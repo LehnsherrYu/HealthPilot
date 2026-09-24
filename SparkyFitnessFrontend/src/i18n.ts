@@ -1,4 +1,6 @@
 import i18n from 'i18next';
+import healthpilotEn from './locales/healthpilot/en.json';
+import healthpilotZh from './locales/healthpilot/zh.json';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpApi from 'i18next-http-backend';
@@ -11,6 +13,15 @@ i18n
   .init({
     supportedLngs: getSupportedLanguages(),
     fallbackLng: 'en',
+    partialBundledLanguages: true,
+    ns: ['translation', 'healthpilot'],
+    defaultNS: 'translation',
+    resources: {
+      en: { healthpilot: healthpilotEn },
+      zh: { healthpilot: healthpilotZh },
+      'zh-Hans': { healthpilot: healthpilotZh },
+      'zh-Hant': { healthpilot: healthpilotZh },
+    },
     detection: {
       order: [
         'localStorage',

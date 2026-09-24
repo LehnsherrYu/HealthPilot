@@ -61,6 +61,10 @@ Cycle and pregnancy tables are owner-only (no delegation). See `SparkyFitnessSer
 
 Quick reference of all tables by domain and purpose. For detailed security tier, permission type, and access rules, see [Database Security Tiers](./database-security-tiers).
 
+### HealthPilot Symptom Journal (Tier 1: Owner-Only)
+
+`healthpilot_symptom_journal` stores immutable original text, editable symptom event fields, start/end instants, status and an optimistic concurrency version. It uses strict owner RLS, never medication or report delegation.
+
 ### Authentication & Identity (Tier 1: Owner-Only)
 | Table | Purpose |
 |-------|---------|
