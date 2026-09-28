@@ -83,8 +83,14 @@ const authenticate = async (
       // Asynchronously update last login if it hasn't been updated in the last hour
       const identity: Record<string, unknown> = session.user;
       const lastLogin = identity.lastLoginAt || identity.last_login_at;
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (typeof lastLogin !== 'string' || new Date(lastLogin) < oneHourAgo) {
+      const lastLoginTime =
+        lastLogin instanceof Date
+          ? lastLogin.getTime()
+          : typeof lastLogin === 'string'
+            ? Date.parse(lastLogin)
+            : Number.NaN;
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      if (!Number.isFinite(lastLoginTime) || lastLoginTime < oneHourAgo) {
         const nowStr = new Date().toISOString();
         identity.lastLoginAt = nowStr;
         identity.last_login_at = nowStr;

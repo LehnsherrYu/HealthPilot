@@ -36,9 +36,9 @@ export const locationDictionary = [
 
 export const contextPatterns = {
   negated:
-    /没有|没(?:有)?(?:出现|感到)|无|否认|不(?:是|会|再)|并非|\b(?:no|not|without|denies|deny|never)\b/i,
+    /没有|没(?:有)?(?:出现|感到)|无|否认|不(?!适)|并非|\b(?:no|not|without|denies|deny|never|(?:do|does|did|have|has|had|is|was|are|were|ca|could|would|wo)n['’]t)\b/i,
   other:
-    /妈妈|母亲|爸爸|父亲|孩子|宝宝|朋友|妻子|丈夫|家人|他|她|\b(?:mother|mom|mum|father|dad|child|baby|friend|wife|husband|he|she|they|you)\b/i,
+    /妈妈|母亲|爸爸|父亲|孩子|宝宝|儿子|女儿|朋友|妻子|丈夫|家人|他|她|\b(?:mother|mom|mum|father|dad|child|baby|son|daughter|friend|wife|husband|he|she|they|you)\b/i,
   self: /(?:^|[，,。.!?；;\s])我(?:的|有|感到|现在|今天|昨天)?|\b(?:I|my)\b/i,
   hypothetical:
     /如果|假如|假设|以后|将来|可能会|\b(?:if|would|might|may develop|in future|in the future)\b/i,

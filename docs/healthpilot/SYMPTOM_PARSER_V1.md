@@ -16,6 +16,7 @@
 - “没有头痛”排除肯定候选；“没有头痛，但是有点恶心”保留恶心候选。描述他人、假设或未来事件时，排除相关内容。规则偏向少识别，不能替代对整段自然语言的理解。
 - 识别到多个不同症状时，不自动选第一个、不合并、不批量保存；列出候选，用户选择一个事件，并自行填写其余字段。相同词典类别的重复提及不代表多个事件，复杂叙述建议分次手工记录。只有一个已知候选但存在“和 / and / 、”等并列连接词时保守拒绝自动填值，防止默默丢弃词典外症状。
 - “最近”“有一阵子”“昨晚”保留为待确认线索。“持续两小时”只作线索，不新增 duration 字段，不推断结束状态或结束时刻。“缓解”“好一点”不等于结束。
+- 英文否定缩写（包括弯引号）与中文否定、子女描述也会被排除。工作或活动的结束不能作为症状结束的依据；活动后缓解不填为诱因。带有“大约 / 左右 / approximately”、备选时刻或时间范围的表达保持待确认。
 - HTML、代码、链接、SQL 和部分指令式表达保守返回不支持提示，仍允许手工记录。所有原文都按普通文本展示，不执行或渲染 HTML、Markdown、链接和指令。
 
 ## 时间与时区
@@ -48,11 +49,13 @@
 
 `SparkyFitnessServer/tests/fixtures/symptom-parser-corpus.json` 在实现规则前冻结 47 条合成语料。契约、Unicode 范围、恶意输入、时区、否定/主体、多症状预期由独立测试固定。期望行为未因实现而降低；格式化只改变排版。代码审查另补充 9 条负数、数值范围、词典外并列表达和非症状活动结束的回归用例，没有改动冻结语料。阶段 1A 的“保存失败保留表单”测试补填了明确开始时间，以适应本阶段取消当前时间默认值的要求。
 
+收尾回归另见 `symptomParser.review.test.ts`，覆盖否定缩写、子女主体、同句内的活动结束、缓解与诱因、模糊时间，以及排除子句后的 UTF-16 依据。`authMiddleware.lastLogin.test.ts` 同时覆盖 Cookie 和 API key：近期合法 Date / 字符串均遵守每小时更新间隔；过期、缺失和非法值触发更新。认证仍沿用既有身份判断，lastLoginAt 只用于更新时间节流，不是会话有效期。
+
 使用仓库固定 pnpm 和项目 Corepack 缓存，从相应包目录运行：
 
 ```bash
 # Server：针对性契约、规则、路由、隐私和既有认证回归
-corepack pnpm exec vitest run tests/symptomParser.contract.test.ts tests/symptomParser.acceptance.test.ts tests/symptomParser.routes.test.ts tests/symptomJournal.test.ts tests/authMiddleware.cache.test.ts tests/bearerAuthBridge.test.ts
+corepack pnpm exec vitest run tests/symptomParser.contract.test.ts tests/symptomParser.acceptance.test.ts tests/symptomParser.review.test.ts tests/symptomParser.routes.test.ts tests/symptomJournal.test.ts tests/authMiddleware.lastLogin.test.ts tests/authMiddleware.cache.test.ts tests/bearerAuthBridge.test.ts
 corepack pnpm run validate
 # 非数据库 CI 测试必须使用隔离的未连接数据库配置和 SKIP_RLS_MATRIX=1
 corepack pnpm run test:ci

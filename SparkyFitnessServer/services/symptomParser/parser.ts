@@ -324,7 +324,25 @@ export function parseSymptomText(
     },
   ];
   for (const factor of factors) {
-    const matches = [...text.matchAll(factor.pattern)].slice(0, 16);
+    const matches = [...text.matchAll(factor.pattern)]
+      .filter((match) => {
+        if (factor.field !== 'triggers') return true;
+        const clauseStart =
+          text
+            .slice(0, match.index)
+            .split(/[，,。.!?；;\n]/)
+            .at(-1) ?? '';
+        const clauseEnd =
+          text
+            .slice(match.index + match[0].length)
+            .split(/[，,。.!?；;\n]/)[0] ?? '';
+        // An activity associated with relief is not evidence of a trigger.
+        return (
+          !/\b(?:improved|better|relieved|eased)\b/i.test(clauseStart) &&
+          !/^后(?:有所)?(?:缓解|好一点|减轻)/.test(clauseEnd)
+        );
+      })
+      .slice(0, 16);
     if (matches.length === 1)
       preview.suggestions[factor.field] = {
         value: matches[0]![0],

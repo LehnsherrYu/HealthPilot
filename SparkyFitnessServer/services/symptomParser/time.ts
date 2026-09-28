@@ -6,7 +6,7 @@ import {
   type SymptomParseEvidence,
   type SymptomParseWarning,
 } from '@workspace/shared';
-import { symptomDictionary } from './dictionary.js';
+import { locationDictionary, symptomDictionary } from './dictionary.js';
 
 // Lifecycle words must refer to this event, not a job, shift, or other activity.
 export function hasSymptomSubject(prefix: string): boolean {
@@ -15,10 +15,22 @@ export function hasSymptomSubject(prefix: string): boolean {
       .split(/[，,。.!?；;\n]/)
       .at(-1)
       ?.trim() ?? '';
-  return (
+  if (
     !clause ||
-    /^(?:it|the symptom|the pain)\s*(?:has|had|is|was)?$/i.test(clause) ||
-    symptomDictionary.some((item) => !clause.matchAll(item.pattern).next().done)
+    /^(?:it|the symptom|the pain)\s*(?:has|had|is|was)?$/i.test(clause)
+  )
+    return true;
+  // A symptom somewhere earlier in a sentence does not own every later verb.
+  // Only accept a direct symptom subject, with optional location/copula words.
+  return symptomDictionary.some((item) =>
+    [...clause.matchAll(item.pattern)].some((match) => {
+      let suffix = clause.slice(match.index + match[0].length);
+      for (const location of locationDictionary)
+        suffix = suffix.replace(location, '');
+      return /^(?:\s*(?:at|in|on|the|has|had|is|was)\b)*\s*$|^(?:从|于|在|已|已经|完全)?$/i.test(
+        suffix
+      );
+    })
   );
 }
 
@@ -66,6 +78,16 @@ export function timeClues(text: string, context: ParserContext): TimeClue[] {
       continue;
     }
     if (!isEnd && !isStart) {
+      clue.warning = 'ambiguous_time';
+      continue;
+    }
+    const clause =
+      before + match[0] + (text.slice(end).split(/[，,。.!?；;\n]/)[0] ?? '');
+    if (
+      /大约|大概|左右|前后|约莫|\b(?:about|around|approximately|roughly|or|maybe|possibly|between|before|after|until)\b|[–—~～]|(?:点|pm|am|\d:\d{2})\s*-\s*/i.test(
+        clause
+      )
+    ) {
       clue.warning = 'ambiguous_time';
       continue;
     }
