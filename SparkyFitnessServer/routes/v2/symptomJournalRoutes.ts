@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createSymptomJournalSchema,
+  symptomParseRequestSchema,
   updateSymptomJournalSchema,
   searchSymptomJournalSchema,
   symptomJournalIdSchema,
@@ -80,6 +81,26 @@ router.post('/search', async (req, res) => {
   res.json(
     await service.search(req.userId, req.authenticatedUserId, body.data)
   );
+});
+/**
+ * @swagger
+ * /v2/symptom-journal/parse:
+ *   post:
+ *     summary: Preview one private symptom event using deterministic language rules
+ *     tags: [HealthPilot Symptom Journal]
+ *     security: [{cookieAuth: []}, {apiKeyAuth: []}]
+ *     description: Accepts only raw_text (1–10000 UTF-16 units) and locale (en or zh). Returns optional suggestions with original-text spans, warnings, rule versions and server-owned time context. Never writes journal records; see docs/healthpilot/SYMPTOM_PARSER_V1.md.
+ *     responses:
+ *       200: {description: Reviewable draft, including unrecognized or ambiguous input}
+ *       400: {description: Invalid request}
+ *       401: {description: Authentication required}
+ *       403: {description: Switched or delegated context rejected}
+ *       500: {description: Safe fixed error without health content}
+ */
+router.post('/parse', async (req, res) => {
+  const body = symptomParseRequestSchema.safeParse(req.body);
+  if (!body.success || Object.keys(req.query).length) return invalid(res);
+  res.json(await service.parse(req.userId, req.authenticatedUserId, body.data));
 });
 router.use('/:id', (req, res, next) => {
   if (!symptomJournalIdSchema.safeParse(req.params).success)

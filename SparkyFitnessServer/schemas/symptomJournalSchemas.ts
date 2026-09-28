@@ -1,6 +1,7 @@
 import { z } from 'zod';
 export {
   createSymptomJournalSchema,
+  symptomParseRequestSchema,
   updateSymptomJournalSchema,
   searchSymptomJournalSchema,
 } from '@workspace/shared';

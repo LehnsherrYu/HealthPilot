@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-09-28_
 
 `@workspace/shared` is a source-first TypeScript workspace library package for schemas, constants, and timezone/day helpers consumed by SparkyFitnessServer, SparkyFitnessFrontend, and SparkyFitnessMobile.
 
@@ -12,6 +12,7 @@ _Last updated: 2026-09-24_
 
 ## Structure
 
+- `src/schemas/api/SymptomParser.api.zod.ts` — optional ephemeral suggestions with UTF-16 evidence bounds, warning codes and server timezone provenance; separate from strict journal create. `src/utils/localTimeCandidates.ts` preserves gaps/repeated local minutes without silently choosing an instant.
 - `src/schemas/database/HealthpilotSymptomJournal.zod.ts` and `src/schemas/api/SymptomJournal.api.zod.ts` — private symptom event contracts; independent of medication symptoms.
 
 - `src/schemas/database/` - one Zod file per table (`Foods.zod.ts`, `Exercises.zod.ts`, ~60 files). Agent shortcut: to learn a table shape, read the matching file here instead of the SQL dump.

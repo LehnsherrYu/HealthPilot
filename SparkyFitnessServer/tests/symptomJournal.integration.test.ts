@@ -1,3 +1,8 @@
+// @ts-expect-error supertest does not ship types in this repository
+import request from 'supertest';
+import express from 'express';
+import journalRoutes from '../routes/v2/symptomJournalRoutes.js';
+import errorHandler from '../middleware/errorHandler.js';
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -70,6 +75,60 @@ describe.runIf(run)('real PostgreSQL private journal', () => {
       client.release();
       await endPool();
     }
+  });
+  it('preview requests do not create rows; explicit create still uses the owner-only route', async () => {
+    const app = express();
+    app.use(express.json());
+    app.use((req, _res, next) => {
+      req.userId = owner;
+      req.authenticatedUserId = owner;
+      next();
+    });
+    app.use('/api/v2/symptom-journal', journalRoutes);
+    app.use(errorHandler);
+    const before = await repository.search(
+      owner,
+      owner,
+      searchSymptomJournalSchema.parse({}),
+      null,
+      null
+    );
+    for (const raw_text of [
+      'Synthetic headache 4/10',
+      '没有头痛，但是恶心。',
+      'Headache and nausea.',
+    ]) {
+      const preview = await request(app)
+        .post('/api/v2/symptom-journal/parse')
+        .send({ raw_text, locale: 'en' });
+      expect(preview.status).toBe(200);
+    }
+    expect(
+      await repository.search(
+        owner,
+        owner,
+        searchSymptomJournalSchema.parse({}),
+        null,
+        null
+      )
+    ).toEqual(before);
+    const created = await request(app)
+      .post('/api/v2/symptom-journal')
+      .send({ ...input, raw_text: '  Synthetic parser save\n🧪 é  ' });
+    expect(created.status).toBe(201);
+    expect(created.body.user_id).toBe(owner);
+    expect(
+      (await repository.get(owner, owner, created.body.id))?.raw_text
+    ).toBe('  Synthetic parser save\n🧪 é  ');
+    expect(await repository.get(owner, other, created.body.id)).toBeNull();
+    expect(
+      (
+        await request(app).delete(
+          `/api/v2/symptom-journal/${created.body.id}?version=1`
+        )
+      ).status
+    ).toBe(204);
+    expect(await repository.get(owner, owner, created.body.id)).toBeNull();
   });
   it('has RLS and FORCE RLS enabled', async () => {
     const client: PoolClient = await getClient(owner, owner);

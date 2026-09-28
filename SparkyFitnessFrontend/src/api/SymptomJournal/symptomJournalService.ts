@@ -1,6 +1,9 @@
 import { apiCall } from '@/api/api';
 import {
   healthpilotSymptomJournalSchema,
+  symptomParseRequestSchema,
+  symptomParsePreviewSchema,
+  type SymptomParseRequest,
   symptomJournalPageSchema,
   type CreateSymptomJournal,
   type UpdateSymptomJournal,
@@ -37,4 +40,23 @@ export async function deleteJournalEntry(
     method: 'DELETE',
     params: { version },
   });
+}
+
+export async function parseJournalDraft(
+  input: SymptomParseRequest,
+  signal?: AbortSignal
+) {
+  const request = symptomParseRequestSchema.safeParse(input);
+  if (!request.success) throw new Error('Invalid parser request.');
+  const result = symptomParsePreviewSchema.safeParse(
+    await apiCall<unknown>(`${base}/parse`, {
+      method: 'POST',
+      body: request.data,
+      signal,
+      cache: 'no-store',
+    })
+  );
+  if (!result.success || result.data.raw_text !== input.raw_text)
+    throw new Error('Invalid parser response.');
+  return result.data;
 }

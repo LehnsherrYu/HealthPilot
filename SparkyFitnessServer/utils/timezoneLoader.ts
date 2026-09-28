@@ -5,16 +5,27 @@ import {
   compareDays,
   todayInZone,
 } from '@workspace/shared';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadUserTimezone(userId: any) {
+/** A missing/invalid preference or read failure is not a confirmed UTC zone. */
+export async function loadUserTimezoneContext(userId: string): Promise<{
+  timezone: string | null;
+  timezone_source: 'user_preference' | 'unconfirmed';
+}> {
   try {
-    const prefs = await getUserPreferences(userId);
-    const tz = prefs?.timezone;
-    if (tz && isValidTimeZone(tz)) return tz;
-    return 'UTC';
+    const prefs: unknown = await getUserPreferences(userId);
+    const tz =
+      typeof prefs === 'object' && prefs !== null && 'timezone' in prefs
+        ? prefs.timezone
+        : null;
+    if (typeof tz === 'string' && tz && isValidTimeZone(tz))
+      return { timezone: tz, timezone_source: 'user_preference' };
   } catch {
-    return 'UTC';
+    /* Deliberately omit preference and database error details. */
   }
+  return { timezone: null, timezone_source: 'unconfirmed' };
+}
+async function loadUserTimezone(userId: unknown): Promise<string> {
+  if (typeof userId !== 'string') return 'UTC';
+  return (await loadUserTimezoneContext(userId)).timezone ?? 'UTC';
 }
 
 /**

@@ -12,7 +12,11 @@
   "started_at": "开始时间",
   "ended_at": "结束时间",
   "status": "状态",
-  "statuses": { "ongoing": "持续中", "resolved": "已结束", "unknown": "未知" },
+  "statuses": {
+    "ongoing": "持续中",
+    "resolved": "已结束",
+    "unknown": "未知"
+  },
   "triggers": "可能的诱因",
   "relieving_factors": "缓解因素",
   "notes": "备注／更正",
@@ -34,7 +38,7 @@
   "loadError": "暂时无法加载症状日志。",
   "retry": "重试",
   "invalid": "请检查必填项、文字长度和时间。已结束的事件必须填写不早于开始时间的结束时间。",
-  "invalidTime": "该本地时间在所选时区不存在，请选择其他时间。",
+  "invalidTime": "开始或结束时间未填写、无效，或在所选时区不存在／重复出现，请补填不含歧义的时间。",
   "filterError": "请检查筛选日期和文字长度。",
   "saveError": "记录未能保存。输入内容已保留，请重试。",
   "deleteError": "记录未能删除，请重试。",
@@ -47,5 +51,66 @@
   "timezone": "时间按 {{timezone}} 显示，日期筛选以开始时间为准。",
   "unknown": "未知",
   "ownerOnly": "请切换回本人账户，再使用私人症状日志。",
-  "language": "日志语言"
+  "language": "日志语言",
+  "parser": {
+    "parse": "解析为草稿",
+    "parsing": "正在解析…",
+    "preview": "核对解析草稿",
+    "reviewHint": "建议仅为临时草稿。请逐项核对字段及原文依据，再明确保存。",
+    "manualHint": "可完全手工填写，也可使用本地规则解析。点击解析不会保存记录。",
+    "reviewSave": "核对并保存",
+    "failed": "暂时无法解析。原文已保留，可继续手工填写或重试。",
+    "locate": "定位原文",
+    "warnings": "需要核对的内容",
+    "candidates": "选择一个事件",
+    "choose": "选用「{{name}}」",
+    "startRequired": "保存前请补填明确的开始时间。开始时间未知时暂时无法保存。",
+    "context": "本次解析参考信息",
+    "versions": "解析器 {{parser}} · 词典 {{dictionary}}",
+    "reference": "参考时刻：{{time}}",
+    "zone": "解析时区：{{timezone}}",
+    "unconfirmedZone": "未确认",
+    "zoneSource": {
+      "user_preference": "来自你的已保存时区设置。",
+      "unconfirmed": "未能核实有效的已保存时区；相对时间保持待确认。"
+    },
+    "states": {
+      "explicit": "明确匹配",
+      "needs_confirmation": "需要确认",
+      "unrecognized": "未识别",
+      "user": "用户填写"
+    },
+    "reason": {
+      "dictionary_match": "匹配了原文中的已收录普通表达。",
+      "explicit_scale": "原文明确写出了 0–10 量表中的数值。",
+      "explicit_start": "按已保存时区解释明确写出的开始日期和时间。",
+      "explicit_end": "按已保存时区解释明确写出的结束日期和时间。",
+      "explicit_status": "原文明确描述了该事件状态。",
+      "described_trigger": "仅记录你描述的关联，不表示医学因果结论。",
+      "described_relief": "记录你描述的缓解因素；好转不代表事件已结束。",
+      "no_match": "未找到支持的明确表达，可自行填写。",
+      "ambiguous": "原文无法确定唯一可靠的值，请确认或补填。",
+      "multiple_candidates": "请自行选择一个症状，并核对其他信息属于该事件。"
+    },
+    "warning": {
+      "unrecognized_symptom": "未识别到肯定的症状名称。词典未收录的症状也可以手工填写。",
+      "negated_symptom": "已排除原文中被否定的症状。",
+      "non_self_subject": "已排除描述他人的内容。",
+      "hypothetical": "已排除假设或将来的症状表达。",
+      "multiple_symptoms": "识别到多个症状，本次只能保存一个事件。请自行选择并核对其余字段；系统没有默认选择任何症状。",
+      "ambiguous_time": "发现时间线索，但日期或具体时刻需要补充，没有静默转换。",
+      "duration_only": "原文提到持续时长；它不提供结束时刻，也不表示事件已经结束。",
+      "timezone_unconfirmed": "未能确认你的时区，本地时间和相对日期需要手工确认。",
+      "nonexistent_local_time": "时区时钟调整导致该本地时刻不存在，请补填其他明确时间。",
+      "ambiguous_local_time": "时区时钟调整导致该本地时刻重复出现，没有自动选择其中一个。",
+      "invalid_severity": "原文强度不符合 0–10 整数量表，请自行确认。",
+      "conflicting_values": "识别到不同的值，请确认本事件应使用哪一个。",
+      "unsupported_expression": "无法可靠解析这段表达，请确认它只描述一个事件，或改为手工填写。代码和链接仅作为普通文本处理。",
+      "candidate_limit": "预览已达到数量上限，请将原文缩小到一个事件。"
+    },
+    "leaveTitle": "放弃未保存的草稿？",
+    "leaveHint": "原文和未保存修改将被清除，未保存草稿不会永久保留。",
+    "stay": "继续填写",
+    "discard": "放弃并离开"
+  }
 }

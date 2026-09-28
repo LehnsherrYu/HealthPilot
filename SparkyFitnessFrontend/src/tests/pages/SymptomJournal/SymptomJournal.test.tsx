@@ -118,6 +118,9 @@ it('keeps the form and original text after save failure', async () => {
   fireEvent.change(within(form).getByLabelText(/Symptom name/), {
     target: { value: 'Synthetic headache' },
   });
+  fireEvent.change(within(form).getByLabelText(/Started at/), {
+    target: { value: '2026-09-24T09:30' },
+  });
   fireEvent.submit(form);
   expect(await screen.findByText(en.saveError)).toBeInTheDocument();
   expect(within(form).getByLabelText(/Your original words/)).toHaveValue(

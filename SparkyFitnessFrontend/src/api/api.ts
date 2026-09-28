@@ -117,7 +117,7 @@ export async function apiCall<T = any>(
   options?: ApiCallOptions
 ): Promise<T> {
   // Journal payloads, filters and response bodies must never reach browser logs.
-  const sensitiveRequest = /^\/v2\/symptom-journal(?:[/?]|$)/i.test(endpoint);
+  const sensitiveRequest = /^\/v2\/symptom-journal/i.test(endpoint);
   const userLoggingLevel = sensitiveRequest ? 'SILENT' : getUserLoggingLevel();
   const isAbsoluteUrl = /^https?:\/\//.test(endpoint);
   const isExternal = options?.externalApi || isAbsoluteUrl;
@@ -346,6 +346,9 @@ export async function apiCall<T = any>(
     //console.log(`API Call: Returning JSON response for ${url}:`, jsonResponse); // Added console.log
     return jsonResponse;
   } catch (err: unknown) {
+    if (sensitiveRequest && options?.signal?.aborted)
+      // eslint-disable-next-line preserve-caught-error -- Transport causes may contain private health text.
+      throw new Error('Journal request canceled.');
     if (err instanceof HttpApiError) {
       throw err;
     }
