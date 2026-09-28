@@ -89,6 +89,7 @@ BEGIN
     'medication_titration_steps',
     'user_custom_symptoms',
     'symptom_entries',
+    'healthpilot_symptom_journal',
     'user_medication_display_preferences',
     'user_custom_symptom_locations',
     'cycle_settings',
@@ -649,6 +650,9 @@ SELECT create_library_policy('workout_presets', 'is_public', ARRAY['can_view_exe
 -- Do NOT apply create_library_policy or create_diary_policy to medication tables.
 SELECT create_owner_policy('user_medication_display_preferences');
 SELECT create_owner_policy('openfoodfacts_sync_queue');
+
+-- HealthPilot journal: no family, medication, or report delegation.
+SELECT create_owner_policy('healthpilot_symptom_journal');
 
 -- Cycle & Pregnancy hub (see migration 20260702180000_add_cycle_tracking_schema.sql).
 -- Tier 1 — owner-only. Deliberately stricter than medications: this reproductive

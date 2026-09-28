@@ -32,9 +32,9 @@ Follow this checklist whenever you add or change a server database migration —
 
 ## 6. Documentation
 
-- [ ] Update `docs/content/2.features/9.family-friends-sharing.md` (user-facing sharing behavior).
-- [ ] Update `docs/content/8.developer/11.database-security-tiers.md`: add the table with its permission type and classify as Tier 1, Tier 2, or Tier 3.
-- [ ] Update `docs/content/8.developer/4.database.md` table index if adding a new domain category.
+- [ ] Update `docs/src/features/family-friends-sharing.md` (user-facing sharing behavior).
+- [ ] Update `docs/src/developer/database-security-tiers.md`: add the table with its permission type and classify as Tier 1, Tier 2, or Tier 3.
+- [ ] Update `docs/src/developer/database.md` table index if adding a new domain category.
 
 ## 7. Downstream contracts
 

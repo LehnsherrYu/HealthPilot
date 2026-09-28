@@ -1,6 +1,35 @@
+import type { ErrorRequestHandler } from 'express';
+import { isSymptomJournalRequest } from '../utils/symptomJournalPrivacy.js';
 import { log } from '../config/logging.js';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const errorHandler = (err: any, _req: any, res: any, _next: any) => {
+interface AppError {
+  message?: string;
+  stack?: string;
+  status?: number;
+  statusCode?: number;
+  code?: string;
+  name?: string;
+  type?: string;
+}
+const errorHandler: ErrorRequestHandler = (error: unknown, req, res, _next) => {
+  const err: AppError =
+    typeof error === 'object' && error !== null ? error : {};
+  if (isSymptomJournalRequest(req)) {
+    const status =
+      err.status === 413 || err.statusCode === 413
+        ? 413
+        : err.type === 'entity.parse.failed'
+          ? 400
+          : 500;
+    log('error', `Symptom journal request failed (${status}).`);
+    res
+      .set('Cache-Control', 'no-store')
+      .status(status)
+      .json({
+        error: 'Journal request failed.',
+        code: status === 500 ? 'JOURNAL_ERROR' : 'INVALID_REQUEST',
+      });
+    return;
+  }
   log(
     'error',
     `Error caught by centralized handler: ${err.message}`,
@@ -34,7 +63,7 @@ const errorHandler = (err: any, _req: any, res: any, _next: any) => {
         break;
       case 'ValidationError':
         statusCode = 400;
-        message = err.message;
+        message = err.message || 'Invalid request';
         break;
       default:
         if (err.code === '23505') {

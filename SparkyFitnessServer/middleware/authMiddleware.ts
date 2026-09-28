@@ -1,3 +1,4 @@
+import { safeRequestPath } from '../utils/symptomJournalPrivacy.js';
 import { log } from '../config/logging.js';
 import userRepository from '../models/userRepository.js';
 import { auth } from '../auth.js';
@@ -140,7 +141,10 @@ const authenticate = async (req: any, res: any, next: any) => {
     }
   }
   // No valid authentication found
-  log('warn', `Authentication: No valid identity provided for ${req.path}`);
+  log(
+    'warn',
+    `Authentication: No valid identity provided for ${safeRequestPath(req)}`
+  );
   return res.status(401).json({ error: 'Authentication required.' });
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

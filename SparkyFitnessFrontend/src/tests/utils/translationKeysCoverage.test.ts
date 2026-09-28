@@ -66,9 +66,16 @@ function extractKeysFromFile(filePath: string): Map<string, number> {
   const text = fs.readFileSync(filePath, 'utf-8');
   const keysWithLine = new Map<string, number>();
 
-  const addMatches = (pattern: RegExp) => {
+  // Namespaced resources are maintained independently of upstream Weblate.
+  const namespaces = new Map<string, string>();
+  for (const binding of text.matchAll(
+    /const\s+\{\s*t(?:\s*:\s*(\w+))?(?:\s*,[^}]*)?\s*\}\s*=\s*useTranslation\(\s*['"]([^'"]+)['"]\s*\)/g
+  )) {
+    namespaces.set(binding[1] || 't', binding[2]!);
+  }
+  const addMatches = (pattern: RegExp, namespace?: string) => {
     for (const match of text.matchAll(pattern)) {
-      const key = match[1];
+      const key = namespace ? `${namespace}:${match[1]}` : match[1];
       if (!keysWithLine.has(`${key}`)) {
         const line = text.slice(0, match.index).split('\n').length;
         keysWithLine.set(`${key}`, line);
@@ -76,7 +83,14 @@ function extractKeysFromFile(filePath: string): Map<string, number> {
     }
   };
 
-  addMatches(T_CALL_PATTERN);
+  addMatches(T_CALL_PATTERN, namespaces.get('t'));
+  for (const [alias, namespace] of namespaces) {
+    if (alias !== 't')
+      addMatches(
+        new RegExp(`\\b${alias}\\(\\s*['"]([A-Za-z0-9_.-]+)['"]`, 'g'),
+        namespace
+      );
+  }
   addMatches(TRANS_COMPONENT_PATTERN);
 
   return keysWithLine;
@@ -108,7 +122,7 @@ function flattenTranslations(
 }
 
 describe('i18n: English translation coverage', () => {
-  it('has an en/translation.json entry for every t()/Trans key used in src', () => {
+  it('has an English catalog entry for every t()/Trans key used in src', () => {
     const sourceFiles = collectSourceFiles(SRC_ROOT);
 
     // key -> first file/line where it was found (for a readable failure message)
@@ -129,6 +143,15 @@ describe('i18n: English translation coverage', () => {
       fs.readFileSync(EN_TRANSLATION_PATH, 'utf-8')
     );
     const flatTranslations = flattenTranslations(rawTranslations);
+    const healthpilot = JSON.parse(
+      fs.readFileSync(
+        path.join(SRC_ROOT, 'locales/healthpilot/en.json'),
+        'utf-8'
+      )
+    );
+    for (const [key, value] of flattenTranslations(healthpilot)) {
+      flatTranslations.set(`healthpilot:${key}`, value);
+    }
 
     const missing: string[] = [];
     const typeMismatch: string[] = [];
@@ -180,13 +203,13 @@ describe('i18n: English translation coverage', () => {
     const messageParts: string[] = [];
     if (missing.length > 0) {
       messageParts.push(
-        `Missing from public/locales/en/translation.json (${missing.length}):\n` +
+        `Missing from the English translation catalogs (${missing.length}):\n` +
           missing.sort().join('\n')
       );
     }
     if (typeMismatch.length > 0) {
       messageParts.push(
-        `Key path conflicts in public/locales/en/translation.json (${typeMismatch.length}):\n` +
+        `Key path conflicts in the English translation catalogs (${typeMismatch.length}):\n` +
           typeMismatch.sort().join('\n')
       );
     }
@@ -201,7 +224,7 @@ describe('i18n: English translation coverage', () => {
       throw new Error(
         `\n\n${messageParts.join('\n\n')}\n\n` +
           `Add the missing key(s) (or resolve the path conflict) in ` +
-          `SparkyFitnessFrontend/public/locales/en/translation.json.\n`
+          `the matching English namespace catalog.\n`
       );
     }
   });

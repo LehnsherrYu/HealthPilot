@@ -116,7 +116,9 @@ export async function apiCall<T = any>(
   endpoint: string,
   options?: ApiCallOptions
 ): Promise<T> {
-  const userLoggingLevel = getUserLoggingLevel();
+  // Journal payloads, filters and response bodies must never reach browser logs.
+  const sensitiveRequest = /^\/v2\/symptom-journal(?:[/?]|$)/i.test(endpoint);
+  const userLoggingLevel = sensitiveRequest ? 'SILENT' : getUserLoggingLevel();
   const isAbsoluteUrl = /^https?:\/\//.test(endpoint);
   const isExternal = options?.externalApi || isAbsoluteUrl;
   let url = isExternal ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -231,10 +233,11 @@ export async function apiCall<T = any>(
       } else {
         errorData = { message: await response.text() };
       }
-      const errorMessage =
-        (errorData.error ? String(errorData.error) : '') ||
-        (errorData.message ? String(errorData.message) : '') ||
-        `API call failed with status ${response.status}`;
+      const errorMessage = sensitiveRequest
+        ? 'Journal request failed.'
+        : (errorData.error ? String(errorData.error) : '') ||
+          (errorData.message ? String(errorData.message) : '') ||
+          `API call failed with status ${response.status}`;
       logging.error(userLoggingLevel, `API Call: Error response from ${url}:`, {
         status: response.status,
         errorData,
@@ -272,7 +275,18 @@ export async function apiCall<T = any>(
         );
         return null as unknown as T; // Return null for 404 with suppression
       } else {
-        const errorCode = errorData.code ? String(errorData.code) : undefined;
+        const errorCode = sensitiveRequest
+          ? [
+              'VERSION_CONFLICT',
+              'NOT_FOUND',
+              'OWNER_ONLY',
+              'INVALID_REQUEST',
+            ].includes(errorData.code)
+            ? String(errorData.code)
+            : 'JOURNAL_ERROR'
+          : errorData.code
+            ? String(errorData.code)
+            : undefined;
         const isDemoRestriction = errorCode?.startsWith('DEMO_') ?? false;
         // DEMO_UPLOAD_RESTRICTED is deliberately not memoized: the guard
         // decides it from the request's content type, not its route, so the
@@ -336,14 +350,21 @@ export async function apiCall<T = any>(
       throw err;
     }
 
-    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorMessage = sensitiveRequest
+      ? 'Journal request failed.'
+      : err instanceof Error
+        ? err.message
+        : String(err);
     logging.error(userLoggingLevel, 'API call network error:', err); // Log the raw error object for better debugging
     toast({
       title: 'Network Error',
       description: errorMessage || 'Could not connect to the server.',
       variant: 'destructive',
     });
-    throw new Error(errorMessage, { cause: err });
+    throw new Error(
+      errorMessage,
+      sensitiveRequest ? undefined : { cause: err }
+    );
   }
 }
 

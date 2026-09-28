@@ -1,4 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
+import {
+  isSymptomJournalRequest,
+  safeRequestPath,
+} from '../utils/symptomJournalPrivacy.js';
 import { log } from '../config/logging.js';
 
 // Client-supplied strings go into single-line log records; anything outside
@@ -29,9 +33,11 @@ function rpcContext(body: unknown): string {
 // global log volume down.
 export function requestLogger(options: { logCompletion?: boolean } = {}) {
   return function (req: Request, res: Response, next: NextFunction): void {
+    const sensitive = isSymptomJournalRequest(req);
+    const requestUrl = sensitive ? safeRequestPath(req) : req.originalUrl;
     log(
       'info',
-      `Incoming request: ${req.method} ${req.originalUrl} (Path: ${req.path})`
+      `Incoming request: ${req.method} ${requestUrl} (Path: ${safeRequestPath(req)})`
     );
     if (options.logCompletion) {
       const start = Date.now();
@@ -41,7 +47,7 @@ export function requestLogger(options: { logCompletion?: boolean } = {}) {
       res.on('finish', () => {
         log(
           'info',
-          `Request finished: ${req.method} ${req.originalUrl} ${res.statusCode} in ${Date.now() - start}ms${rpcContext(req.body)}`
+          `Request finished: ${req.method} ${requestUrl} ${res.statusCode} in ${Date.now() - start}ms${sensitive ? '' : rpcContext(req.body)}`
         );
       });
       // 'close' without a completed write means the connection died before the
@@ -50,7 +56,7 @@ export function requestLogger(options: { logCompletion?: boolean } = {}) {
         if (!res.writableFinished) {
           log(
             'warn',
-            `Request aborted: ${req.method} ${req.originalUrl} after ${Date.now() - start}ms${rpcContext(req.body)}`
+            `Request aborted: ${req.method} ${requestUrl} after ${Date.now() - start}ms${sensitive ? '' : rpcContext(req.body)}`
           );
         }
       });
