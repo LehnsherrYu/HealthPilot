@@ -1,4 +1,8 @@
-import { safeRequestPath } from '../utils/symptomJournalPrivacy.js';
+import type { Request, Response, NextFunction } from 'express';
+import {
+  isSymptomJournalRequest,
+  safeRequestPath,
+} from '../utils/symptomJournalPrivacy.js';
 import { log } from '../config/logging.js';
 import userRepository from '../models/userRepository.js';
 import { auth } from '../auth.js';
@@ -10,8 +14,25 @@ import {
   setCachedSession,
 } from '../utils/apiKeySessionCache.js';
 import { bridgeBearerAuthHeader } from '../utils/bearerAuthBridge.js';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const authenticate = async (req: any, res: any, next: any) => {
+type AuthenticationRequest = Pick<
+  Request,
+  | 'headers'
+  | 'cookies'
+  | 'userId'
+  | 'authenticatedUserId'
+  | 'originalUserId'
+  | 'activeUserId'
+  | 'user'
+  | 'path'
+  | 'originalUrl'
+>;
+const authenticate = async (
+  req: AuthenticationRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const sensitive = isSymptomJournalRequest(req);
+  if (sensitive) res.set('Cache-Control', 'no-store');
   //log("debug", `authenticate middleware: req.path = ${req.path}, req.headers.cookie = ${req.headers.cookie}`);
   // 1. Better Auth Session & API Key Check (Unified Identity)
   // Tracks the raw API key when this request is API-key-authed, so we can
@@ -42,7 +63,13 @@ const authenticate = async (req: any, res: any, next: any) => {
     }
     if (!session) {
       session = await auth.api.getSession({
-        headers: req.headers,
+        headers: Object.fromEntries(
+          Object.entries(req.headers).flatMap(([name, value]) =>
+            value === undefined
+              ? []
+              : [[name, Array.isArray(value) ? value.join(', ') : value]]
+          )
+        ),
       });
       if (session && session.user && apiKeyToken) {
         setCachedSession(apiKeyToken, session);
@@ -54,16 +81,25 @@ const authenticate = async (req: any, res: any, next: any) => {
       req.user = session.user; // Full user object (includes role)
 
       // Asynchronously update last login if it hasn't been updated in the last hour
-      const lastLogin =
-        (session.user as any).lastLoginAt ||
-        (session.user as any).last_login_at;
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (!lastLogin || new Date(lastLogin) < oneHourAgo) {
+      const identity: Record<string, unknown> = session.user;
+      const lastLogin = identity.lastLoginAt || identity.last_login_at;
+      const lastLoginTime =
+        lastLogin instanceof Date
+          ? lastLogin.getTime()
+          : typeof lastLogin === 'string'
+            ? Date.parse(lastLogin)
+            : Number.NaN;
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      if (!Number.isFinite(lastLoginTime) || lastLoginTime < oneHourAgo) {
         const nowStr = new Date().toISOString();
-        (session.user as any).lastLoginAt = nowStr;
-        (session.user as any).last_login_at = nowStr;
+        identity.lastLoginAt = nowStr;
+        identity.last_login_at = nowStr;
         userRepository.updateUserLastLogin(session.user.id).catch((err) => {
-          log('error', 'Failed to update user last login in middleware:', err);
+          log(
+            'error',
+            'Failed to update user last login in middleware:',
+            ...(sensitive ? [] : [err])
+          );
         });
       }
       // Handle 'sparky_active_user_id' cookie for context switching
@@ -87,12 +123,16 @@ const authenticate = async (req: any, res: any, next: any) => {
           req.activeUserId = activeUserId;
           log(
             'info',
-            `Authentication: Context switched. User ${req.authenticatedUserId} acting as ${req.activeUserId}`
+            sensitive
+              ? 'Authentication: Switched context.'
+              : `Authentication: Context switched. User ${req.authenticatedUserId} acting as ${req.activeUserId}`
           );
         } else {
           log(
             'warn',
-            `Authentication: Context access denied for User ${req.authenticatedUserId} -> ${activeUserId}`
+            sensitive
+              ? 'Authentication: Context access denied.'
+              : `Authentication: Context access denied for User ${req.authenticatedUserId} -> ${activeUserId}`
           );
           req.activeUserId = req.authenticatedUserId;
         }
@@ -109,8 +149,10 @@ const authenticate = async (req: any, res: any, next: any) => {
       } catch (err) {
         log(
           'error',
-          `Lazy Initialization failed for user ${session.user.id}:`,
-          err
+          sensitive
+            ? 'Authentication: Initialization failed.'
+            : `Lazy Initialization failed for user ${session.user.id}:`,
+          ...(sensitive ? [] : [err])
         );
       }
       return dbContextStorage.run(
@@ -119,13 +161,35 @@ const authenticate = async (req: any, res: any, next: any) => {
       );
     }
   } catch (error) {
-    log('error', 'Error checking Better Auth identity:', error);
-    // @ts-expect-error TS(2571): Object is of type 'unknown'.
-    const code = error?.body?.code;
+    log(
+      'error',
+      'Error checking Better Auth identity:',
+      ...(sensitive ? [] : [error])
+    );
+    const body =
+      typeof error === 'object' && error !== null && 'body' in error
+        ? error.body
+        : null;
+    const code =
+      typeof body === 'object' && body !== null && 'code' in body
+        ? body.code
+        : null;
     if (code === 'RATE_LIMITED') {
-      // @ts-expect-error TS(2571): Object is of type 'unknown'.
-      const retryAfterMs = error.body?.details?.tryAgainIn;
-      if (retryAfterMs) {
+      const details =
+        typeof body === 'object' && body !== null && 'details' in body
+          ? body.details
+          : null;
+      const retryAfterMs =
+        typeof details === 'object' &&
+        details !== null &&
+        'tryAgainIn' in details
+          ? details.tryAgainIn
+          : null;
+      if (
+        typeof retryAfterMs === 'number' &&
+        Number.isFinite(retryAfterMs) &&
+        retryAfterMs > 0
+      ) {
         res.set('Retry-After', String(Math.ceil(retryAfterMs / 1000)));
       }
       return res.status(429).json({ error: 'Rate limit exceeded.' });

@@ -85,7 +85,7 @@ function OwnedJournal({ timezone }: { timezone: string }) {
     setFilterError('');
     setFilters(parsed.data);
   }
-  function saveEntry(body: CreateSymptomJournal | UpdateSymptomJournal) {
+  async function saveEntry(body: CreateSymptomJournal | UpdateSymptomJournal) {
     setSaveError('');
     setNotice('');
     const input =
@@ -95,14 +95,14 @@ function OwnedJournal({ timezone }: { timezone: string }) {
           ? { body }
           : null;
     if (!input) return;
-    save.mutate(input, {
-      onSuccess: () => {
-        setEditor(null);
-        setFilters((old) => ({ ...old, offset: 0 }));
-        setNotice('saved');
-      },
-      onError: (error) => setSaveError(errorText(error, 'saveError')),
-    });
+    try {
+      await save.mutateAsync(input);
+      setEditor(null);
+      setFilters((old) => ({ ...old, offset: 0 }));
+      setNotice('saved');
+    } catch (error) {
+      setSaveError(errorText(error, 'saveError'));
+    }
   }
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 p-4 pb-24 sm:p-6">

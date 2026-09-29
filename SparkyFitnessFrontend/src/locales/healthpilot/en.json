@@ -38,7 +38,7 @@
   "loadError": "Could not load the journal.",
   "retry": "Retry",
   "invalid": "Check the required fields, lengths and times. A resolved event needs an end time on or after its start.",
-  "invalidTime": "This local time does not exist in your timezone. Choose another time.",
+  "invalidTime": "This local time is missing, invalid, nonexistent or repeated in your timezone. Enter an unambiguous time.",
   "filterError": "Check the filter dates and text lengths.",
   "saveError": "Could not save the entry. Your input is still here; please try again.",
   "deleteError": "Could not delete the entry. Please try again.",
@@ -51,5 +51,66 @@
   "timezone": "Times are shown in {{timezone}}. Filters use the start date.",
   "unknown": "Unknown",
   "ownerOnly": "Switch back to your own profile to use your private journal.",
-  "language": "Journal language"
+  "language": "Journal language",
+  "parser": {
+    "parse": "Parse into draft",
+    "parsing": "Parsing…",
+    "preview": "Review the draft",
+    "reviewHint": "Suggestions are temporary. Check every field and its original words before saving.",
+    "manualHint": "You can fill in every field by hand, or use the local rule-based parser. Parsing does not save a record.",
+    "reviewSave": "Review and save",
+    "failed": "Could not parse this text. Your input is preserved; continue by hand or try again.",
+    "locate": "Find in original",
+    "warnings": "Items to check",
+    "candidates": "Choose one event",
+    "choose": "Use {{name}}",
+    "startRequired": "Add an explicit start time before saving. An unknown start time cannot be saved yet.",
+    "context": "Parsing reference information",
+    "versions": "Parser {{parser}} · Dictionary {{dictionary}}",
+    "reference": "Reference instant: {{time}}",
+    "zone": "Parsing timezone: {{timezone}}",
+    "unconfirmedZone": "Unconfirmed",
+    "zoneSource": {
+      "user_preference": "From your saved timezone preference.",
+      "unconfirmed": "No valid saved timezone could be verified; relative times were left for confirmation."
+    },
+    "states": {
+      "explicit": "Explicit match",
+      "needs_confirmation": "Needs confirmation",
+      "unrecognized": "Unrecognized",
+      "user": "Entered by you"
+    },
+    "reason": {
+      "dictionary_match": "Matched a supported phrase in the original words.",
+      "explicit_scale": "A number was explicitly written on a 0–10 scale.",
+      "explicit_start": "An explicit start date and time were interpreted in the saved timezone.",
+      "explicit_end": "An explicit end date and time were interpreted in the saved timezone.",
+      "explicit_status": "The original words explicitly state this event status.",
+      "described_trigger": "An association described by you; this is not a medical cause.",
+      "described_relief": "A factor you described as helping. Improvement does not mean the event ended.",
+      "no_match": "No supported explicit phrase was found. You can enter a value yourself.",
+      "ambiguous": "The original words do not determine one reliable value.",
+      "multiple_candidates": "Choose one symptom yourself; other details must belong to that event."
+    },
+    "warning": {
+      "unrecognized_symptom": "No affirmative symptom was recognized. You can enter an unlisted symptom by hand.",
+      "negated_symptom": "A negated symptom was excluded.",
+      "non_self_subject": "Words about another person were excluded.",
+      "hypothetical": "Hypothetical or future symptoms were excluded.",
+      "multiple_symptoms": "Several symptoms were found. This form saves one event only. Choose one yourself and check its details; no symptom was selected automatically.",
+      "ambiguous_time": "A time clue needs an explicit date or clock time. It was not converted silently.",
+      "duration_only": "A duration was mentioned. It does not supply an end time or mean the event ended.",
+      "timezone_unconfirmed": "Your timezone could not be confirmed. Local and relative times need manual confirmation.",
+      "nonexistent_local_time": "This clock time does not exist because of a timezone clock change. Enter another explicit time.",
+      "ambiguous_local_time": "This clock time occurs twice because of a timezone clock change. No instant was selected.",
+      "invalid_severity": "The written intensity is outside the supported integer 0–10 scale.",
+      "conflicting_values": "Several different values were found. Confirm the correct value for this event.",
+      "unsupported_expression": "This wording cannot be parsed reliably. Check that it describes one event, or fill in the fields by hand. Code and links are treated only as plain text.",
+      "candidate_limit": "The preview limit was reached. Narrow the text to one event."
+    },
+    "leaveTitle": "Discard this unsaved draft?",
+    "leaveHint": "The original text and unsaved changes will be cleared. They are not saved anywhere.",
+    "stay": "Keep editing",
+    "discard": "Discard and leave"
+  }
 }

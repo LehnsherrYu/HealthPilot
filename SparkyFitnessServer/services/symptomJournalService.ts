@@ -1,11 +1,16 @@
 import {
   dayToUtcRange,
   type CreateSymptomJournal,
+  type SymptomParseRequest,
   type UpdateSymptomJournal,
   type SearchSymptomJournal,
 } from '@workspace/shared';
 import repository from '../models/symptomJournalRepository.js';
-import { loadUserTimezone } from '../utils/timezoneLoader.js';
+import {
+  loadUserTimezone,
+  loadUserTimezoneContext,
+} from '../utils/timezoneLoader.js';
+import { parseSymptomText } from './symptomParser/parser.js';
 
 export class SymptomJournalError extends Error {
   constructor(
@@ -62,4 +67,10 @@ async function mutate(
     throw new SymptomJournalError(409, 'VERSION_CONFLICT');
   return entry;
 }
-export default { search, create, get, mutate };
+async function parse(owner: string, actor: string, input: SymptomParseRequest) {
+  assertOwner(owner, actor);
+  const reference_time = new Date().toISOString();
+  const context = await loadUserTimezoneContext(owner);
+  return parseSymptomText(input, { ...context, reference_time });
+}
+export default { search, create, get, mutate, parse };

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-09-28_
 
 This is the repo-root monorepo guide for SparkyFitness. Use it to choose the right package, understand shared repo-level rules, and find the next guide to read.
 
@@ -67,9 +67,10 @@ Cheap ways to learn things:
 - API request/response contract: `shared/src/schemas/api/<Name>.api.zod.ts`.
 - Definition of done: CI (`.github/workflows/ci-tests.yml`) runs `pnpm run validate` (which includes Knip unused export & dead code checks in frontend and mobile) plus the package's CI test script for each changed package. Run those locally before declaring work complete.
 
-## HealthPilot Phase 1A
+## HealthPilot Phases 1A and 1B
 
 - Owner-only symptom journal: `docs/healthpilot/SYMPTOM_JOURNAL_V1.md`; server `/api/v2/symptom-journal`, web `/symptom-journal`, table `healthpilot_symptom_journal`.
+- Phase 1B: `docs/healthpilot/SYMPTOM_PARSER_V1.md`; authenticated `POST /api/v2/symptom-journal/parse` returns an ephemeral bilingual rule-based preview. No model, external service, journal writes or new migration. Preserve UTF-16 evidence offsets and require explicit save.
 - This domain never uses medication/family/report permissions or logs health payloads. Its shared schemas are additive; native mobile still uses the existing medication symptom API.
 
 ## Cross-Package Rules

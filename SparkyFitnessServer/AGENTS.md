@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-09-28_
 
 SparkyFitness Server is the backend API package for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessServer/`.
 
@@ -25,7 +25,7 @@ If a task also touches `shared/`, the frontend, or the mobile app, read the rele
 - Dev boot path: `pnpm start` -> `nodemon` -> `tsx index.ts`
 - `index.ts` loads `../.env`, applies file-backed secrets, runs preflight checks, calls `initializeDatabase()` for migrations and RLS policies, then imports `SparkyFitnessServer.ts`
 - Main app shell: `SparkyFitnessServer.ts`
-- Stack: Express 5, PostgreSQL via `pg`, Better Auth, Zod, TypeScript 6, Vitest 4, ESLint 10
+- Stack: Express 5, PostgreSQL via `pg`, Better Auth, Zod, TypeScript 6, Vitest 5, ESLint 10
 - Module system: ESM with `type: "module"` and `moduleResolution: "NodeNext"`
 - The package is now effectively TypeScript-first; almost all source files are `.ts`
 - Main domains: HealthPilot owner-only symptom journal, food and meal tracking, exercise logging, health and sleep data, sleep science, fasting, medications, mood, menstrual cycle and pregnancy, reporting, AI chat, onboarding, identity, admin tooling, and external provider integrations
@@ -56,6 +56,7 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 
 ## Source Map
 
+- `services/symptomParser/` — bounded pure rules and bilingual dictionary; `symptomJournalService.parse` fixes server reference time and loads timezone provenance. `/parse` precedes `/:id`, has no journal writes, and inherits owner-only privacy.
 - `routes/v2/symptomJournalRoutes.ts`, `services/symptomJournalService.ts`, `models/symptomJournalRepository.ts` — private HealthPilot journal; no delegation or reports. `utils/symptomJournalPrivacy.ts` redacts this domain in global middleware.
 
 - `index.ts` - real dev entrypoint; loads env, secrets, and preflight checks before booting the app
@@ -238,7 +239,7 @@ When searching, ignore noisy/generated directories unless you explicitly need th
 
 ## Quick Routing
 
-- HealthPilot symptom journal: inspect `routes/v2/symptomJournalRoutes.ts`, its service/repository, and `../docs/healthpilot/SYMPTOM_JOURNAL_V1.md`.
+- HealthPilot symptom journal: inspect `routes/v2/symptomJournalRoutes.ts`, its service/repository, `services/symptomParser/`, and `../docs/healthpilot/SYMPTOM_{JOURNAL,PARSER}_V1.md`. Freeze synthetic expectations before changing rules; the parser never reads health history.
 
 - Startup, env, or deployment issue:
   inspect `index.ts`, `SparkyFitnessServer.ts`, `utils/secretLoader.ts`, `utils/preflightChecks.ts`, and `config/logging.ts`

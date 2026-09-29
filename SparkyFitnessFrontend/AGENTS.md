@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-09-28_
 
 SparkyFitness Frontend is the React web app for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessFrontend/`.
 
@@ -48,7 +48,7 @@ Features are organized by domain, and the same domain folder name appears in `sr
 
 ## Source Map
 
-- `src/pages/SymptomJournal/`, `src/api/SymptomJournal/`, `src/hooks/SymptomJournal/` — owner-only HealthPilot journal.
+- `src/pages/SymptomJournal/`, `src/api/SymptomJournal/`, `src/hooks/SymptomJournal/` — owner-only HealthPilot journal and reviewable bilingual parser. `useSymptomParserDraft` holds draft/request revisions only in component memory; never use persisted caches or offline mutation queues for parsing.
 
 - `src/main.tsx` - app bootstrap; creates the shared `QueryClient` with global `QueryCache`/`MutationCache` handlers that render toasts from query/mutation `meta` (`errorTitle`, `errorMessage`, `successMessage`).
 - `src/App.tsx` - route registry via `createBrowserRouter`, plus `PrivateRoute` and `PermissionRoute` wrappers (permission-gated areas include `reports` and `admin`).
@@ -94,7 +94,7 @@ When searching, ignore `node_modules/`, `dist/`, and every locale except `public
 
 ## Quick Routing
 
-- HealthPilot journal: `src/pages/SymptomJournal/`; its independent `healthpilot` namespace lives in `src/locales/healthpilot/{en,zh}.json`. These are hand-maintained resources outside upstream translation sync.
+- HealthPilot journal: `src/pages/SymptomJournal/`; its independent `healthpilot` namespace lives in `src/locales/healthpilot/{en,zh}.json`. These are hand-maintained resources outside upstream translation sync. Phase 1B previews require explicit save; original edits invalidate all previous evidence, and user-entered fields survive late responses. See `../docs/healthpilot/SYMPTOM_PARSER_V1.md`.
 
 - Routing/navigation/permission issue: `src/App.tsx` (router, `PrivateRoute`, `PermissionRoute`) and `src/layouts/MainLayout.tsx`.
 - API/error-toast issue: `src/api/api.ts`, then the domain client in `src/api/<Domain>/`, then the query/mutation `meta` in the calling hook.

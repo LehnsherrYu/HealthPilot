@@ -258,6 +258,8 @@ app.use(
 // takes a much lower cap: the routes that need the headroom (image analysis,
 // uploads, FIT import) are blocked for the demo account anyway, and a 50mb
 // parse per request is a cheap way for an anonymous visitor to burn memory.
+// Bound the ephemeral parser request before the larger shared JSON parser.
+app.use('/api/v2/symptom-journal/parse', express.json({ limit: '64kb' }));
 app.use(express.json({ limit: isDemoMode() ? '1mb' : '50mb' }));
 app.use(cookieParser());
 // --- Better Auth Mounting Logic (Moved to after migrations) ---
