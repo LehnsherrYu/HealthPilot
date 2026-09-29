@@ -11,6 +11,9 @@ import {
   symptomDictionary,
   locationDictionary,
   contextPatterns,
+  chineseReliefPattern,
+  chineseReliefAfterPattern,
+  reliefFactorPattern,
   DICTIONARY_VERSION,
 } from './dictionary.js';
 import { timeClues, hasSymptomSubject, type ParserContext } from './time.js';
@@ -83,7 +86,14 @@ export function parseSymptomText(
     const scope = { start, end };
     if (contextPatterns.other.test(clause)) other = true;
     else if (contextPatterns.self.test(clause)) other = false;
-    if (contextPatterns.hypothetical.test(clause)) hypothetical = true;
+    // In a reported improvement, "热敷以后好转" uses 以后 as "after".
+    // Only the context check omits that expression; evidence always uses raw offsets.
+    if (
+      contextPatterns.hypothetical.test(
+        clause.replace(chineseReliefPattern, '')
+      )
+    )
+      hypothetical = true;
     else if (contextPatterns.self.test(clause)) hypothetical = false;
     if (
       /但是|但|而且|\bbut\b|\bhowever\b|(?:^|\s)I (?:have|feel)\b|有点|出现/.test(
@@ -212,6 +222,61 @@ export function parseSymptomText(
     /持续(?:了)?\s*[一二两三四五六七八九十\d]+(?:个)?小时|\b(?:lasted|for)\s+(?:one|two|three|\d+)\s+hours?\b/gi
   ))
     warn('duration_only', [spanOf(match)]);
+  const factors = [
+    {
+      field: 'triggers' as const,
+      pattern:
+        /(久坐|长时间坐着|运动|吃饭|进食)(?=后)|(?<=after )(prolonged sitting|sitting|exercise|eating)\b/gi,
+      reason: 'described_trigger' as const,
+    },
+    {
+      field: 'relieving_factors' as const,
+      pattern: reliefFactorPattern,
+      reason: 'described_relief' as const,
+    },
+  ];
+  for (const factor of factors) {
+    if (factor.field === 'triggers' && !preview.candidates.length) continue;
+    const matches = [...text.matchAll(factor.pattern)]
+      .filter((match) => {
+        if (factor.field !== 'triggers') return true;
+        const clauseStart =
+          text
+            .slice(0, match.index)
+            .split(/[，,。.!?；;\n]/)
+            .at(-1) ?? '';
+        const clauseEnd =
+          text
+            .slice(match.index + match[0].length)
+            .split(/[，,。.!?；;\n]/)[0] ?? '';
+        // An activity associated with relief is not evidence of a trigger.
+        return (
+          !/\b(?:improved|better|relieved|eased)\b/i.test(clauseStart) &&
+          !chineseReliefAfterPattern.test(clauseEnd)
+        );
+      })
+      .slice(0, 16)
+      .map((match) => {
+        const value = match[1] ?? match[0];
+        const start = match.index ?? 0;
+        return { value, evidence: { start, end: start + value.length } };
+      });
+    if (matches.length === 1)
+      preview.suggestions[factor.field] = {
+        value: matches[0]!.value,
+        status: 'explicit',
+        reason: factor.reason,
+        evidence: [matches[0]!.evidence],
+      };
+    else if (matches.length > 1) {
+      uncertain(
+        factor.field,
+        matches.map((match) => match.evidence)
+      );
+      warn('conflicting_values');
+    }
+  }
+
   if (!preview.candidates.length)
     return symptomParsePreviewSchema.parse(preview);
 
@@ -309,54 +374,5 @@ export function parseSymptomText(
     uncertain('ended_at', preview.suggestions.ended_at!.evidence);
   }
 
-  const factors = [
-    {
-      field: 'triggers' as const,
-      pattern:
-        /(久坐|长时间坐着|运动|吃饭|进食)(?=后)|(?<=after )(prolonged sitting|sitting|exercise|eating)\b/gi,
-      reason: 'described_trigger' as const,
-    },
-    {
-      field: 'relieving_factors' as const,
-      pattern:
-        /(休息|走动|喝水|热敷)(?=后(?:有所)?(?:缓解|好一点|减轻))|(?<=improved after )(rest|walking|water)|(?<=better after )(rest|walking|water)/gi,
-      reason: 'described_relief' as const,
-    },
-  ];
-  for (const factor of factors) {
-    const matches = [...text.matchAll(factor.pattern)]
-      .filter((match) => {
-        if (factor.field !== 'triggers') return true;
-        const clauseStart =
-          text
-            .slice(0, match.index)
-            .split(/[，,。.!?；;\n]/)
-            .at(-1) ?? '';
-        const clauseEnd =
-          text
-            .slice(match.index + match[0].length)
-            .split(/[，,。.!?；;\n]/)[0] ?? '';
-        // An activity associated with relief is not evidence of a trigger.
-        return (
-          !/\b(?:improved|better|relieved|eased)\b/i.test(clauseStart) &&
-          !/^后(?:有所)?(?:缓解|好一点|减轻)/.test(clauseEnd)
-        );
-      })
-      .slice(0, 16);
-    if (matches.length === 1)
-      preview.suggestions[factor.field] = {
-        value: matches[0]![0],
-        status: 'explicit',
-        reason: factor.reason,
-        evidence: [spanOf(matches[0]!)],
-      };
-    else if (matches.length > 1) {
-      uncertain(
-        factor.field,
-        matches.map((match) => spanOf(match))
-      );
-      warn('conflicting_values');
-    }
-  }
   return symptomParsePreviewSchema.parse(preview);
 }

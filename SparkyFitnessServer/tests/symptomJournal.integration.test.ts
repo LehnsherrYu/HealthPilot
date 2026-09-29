@@ -97,6 +97,10 @@ describe.runIf(run)('real PostgreSQL private journal', () => {
       'Synthetic headache 4/10',
       '没有头痛，但是恶心。',
       'Headache and nausea.',
+      '头痛，热敷后好多了',
+      '热敷以后好转了一些',
+      '休息后舒服多了',
+      '喝水后症状减轻',
     ]) {
       const preview = await request(app)
         .post('/api/v2/symptom-journal/parse')

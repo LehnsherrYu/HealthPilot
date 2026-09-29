@@ -34,6 +34,17 @@ export const locationDictionary = [
   /腹部|肚子|\babdomen\b|\babdominal area\b/gi,
 ];
 
+// A reported improvement describes the user's experience, not medical causation.
+const chineseReliefAfter =
+  '(?:以后|后)(?:症状)?(?:有所)?(?:缓解|好一点|好多了|好转|舒服(?:些|多了)|减轻)';
+export const chineseReliefAfterPattern = new RegExp(`^${chineseReliefAfter}`);
+const chineseRelief = `(休息|走动|喝水|热敷)${chineseReliefAfter}`;
+export const chineseReliefPattern = new RegExp(chineseRelief, 'gi');
+export const reliefFactorPattern = new RegExp(
+  `${chineseRelief}|(?<=improved after )(?:rest|walking|water)|(?<=better after )(?:rest|walking|water)`,
+  'gi'
+);
+
 export const contextPatterns = {
   negated:
     /没有|没(?:有)?(?:出现|感到)|无|否认|不(?!适)|并非|\b(?:no|not|without|denies|deny|never|(?:do|does|did|have|has|had|is|was|are|were|ca|could|would|wo)n['’]t)\b/i,
@@ -41,7 +52,7 @@ export const contextPatterns = {
     /妈妈|母亲|爸爸|父亲|孩子|宝宝|儿子|女儿|朋友|妻子|丈夫|家人|他|她|\b(?:mother|mom|mum|father|dad|child|baby|son|daughter|friend|wife|husband|he|she|they|you)\b/i,
   self: /(?:^|[，,。.!?；;\s])我(?:的|有|感到|现在|今天|昨天)?|\b(?:I|my)\b/i,
   hypothetical:
-    /如果|假如|假设|以后|将来|可能会|\b(?:if|would|might|may develop|in future|in the future)\b/i,
+    /如果|假如|假设|以后|将来|可能会|准备|打算|计划|将要|是否|吗|\b(?:if|would|might|may develop|in future|in the future)\b/i,
   unsupported:
     /[<>]|```|https?:\/\/|\b(?:select|drop|insert|delete)\s+(?:table|from|into)|忽略规则|执行命令|读取\s*\/|\bignore (?:all |previous )?(?:rules|instructions)\b|\b(?:execute|run) (?:commands?|shell)\b/i,
 };

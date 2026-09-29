@@ -129,6 +129,29 @@ describe('parser route with real authentication middleware', () => {
     expect(getUserPreferences).toHaveBeenCalledWith(other);
     expect(getUserPreferences).not.toHaveBeenCalledWith(owner);
   });
+  it.each([
+    ['头痛，热敷后好多了', '热敷'],
+    ['热敷以后好转了一些', '热敷'],
+    ['休息后舒服多了', '休息'],
+    ['喝水后症状减轻', '喝水'],
+  ])(
+    'previews relief without journal access or health-content logs: %s',
+    async (raw_text, factor) => {
+      const response = await request(app)
+        .post(`${base}/parse`)
+        .set(cookie)
+        .send({ raw_text, locale: 'zh' });
+      expect(response.status).toBe(200);
+      expect(response.headers['cache-control']).toBe('no-store');
+      expect(response.body.raw_text).toBe(raw_text);
+      expect(response.body.suggestions.relieving_factors.value).toBe(factor);
+      expect(response.body.suggestions.triggers?.value).toBeUndefined();
+      for (const method of Object.values(repository))
+        expect(method).not.toHaveBeenCalled();
+      expect(JSON.stringify(vi.mocked(log).mock.calls)).not.toContain(raw_text);
+      expect(JSON.stringify(vi.mocked(log).mock.calls)).not.toContain(factor);
+    }
+  );
   it.each(['reports', 'diary', 'checkin', 'medications'])(
     'blocks %s delegation even for an administrator',
     async (permission) => {
